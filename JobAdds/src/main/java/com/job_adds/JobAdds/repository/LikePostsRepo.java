@@ -9,9 +9,6 @@ import java.util.Optional;
 @Repository
 public interface LikePostsRepo extends JpaRepository<LikePosts,Integer> {
 
-
-
-
     public Optional<LikePosts> findByIdjobAndIdworker(Integer id1,Integer id2);
 
 

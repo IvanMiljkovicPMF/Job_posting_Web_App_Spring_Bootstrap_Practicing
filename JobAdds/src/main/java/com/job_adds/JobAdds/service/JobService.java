@@ -1,5 +1,6 @@
 package com.job_adds.JobAdds.service;
 
+import com.job_adds.JobAdds.entity.Company;
 import com.job_adds.JobAdds.entity.Job_Posting;
 import com.job_adds.JobAdds.repository.JobsRepo;
 
@@ -22,8 +23,8 @@ public class JobService {
         return jobsRepo.findById(id);
     }
 
-    public void save(Job_Posting jobPosting) {
-        jobsRepo.save(jobPosting);
+    public void Save(Job_Posting jobPosting) {
+         jobsRepo.save(jobPosting);
     }
 
     public List<Job_Posting> findByKeyword(String keyword)
@@ -31,12 +32,12 @@ public class JobService {
         return jobsRepo.findByKeyword(keyword);
     }
 
-//    public void likeJob(int jobPosting){
-//
-//        jobsRepo.likesJob_Posting(jobPosting);
-//    }
+    public List<Job_Posting> findAll()
+    {
+        return jobsRepo.findAll();
+    }
 
-//    public void unlikeJob(Job_Posting jobPosting){
-//        jobsRepo.unlikesPost(jobPosting.getId());
-//    }
+    public void Delete(Job_Posting job_posting) {
+        jobsRepo.delete(job_posting);
+    }
 }

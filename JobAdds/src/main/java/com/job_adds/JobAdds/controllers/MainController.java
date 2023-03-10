@@ -6,7 +6,7 @@ import com.job_adds.JobAdds.entity.Worker;
 import com.job_adds.JobAdds.repository.CompanyRepo;
 import com.job_adds.JobAdds.repository.JobsRepo;
 import com.job_adds.JobAdds.repository.WorkerRepo;
-import com.job_adds.JobAdds.service.JobService;
+import com.job_adds.JobAdds.service.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -21,21 +21,19 @@ import java.util.List;
 public class MainController {
 
     @Autowired
-    private CompanyRepo companyRepo;
+    private WorkerDetailsServices workerServices;
     @Autowired
-    private JobsRepo jobsRepo;
+    private CompanyDetailsServices companyServices;
     @Autowired
     private JobService jobService;
-    @Autowired
-    private WorkerRepo workerRepo;
 
     //Home
     @GetMapping("/")
     public String HomePage(Model model)
     {
-        List<Job_Posting> listJobs = jobsRepo.findAll();
+        List<Job_Posting> listJobs = jobService.findAll();
         model.addAttribute("listJobs", listJobs);
-        List<Company> listCompanies = companyRepo.findAll();
+        List<Company> listCompanies = companyServices.findAll();
         model.addAttribute("listCompanies", listCompanies);
 
         return "home/home";
@@ -44,7 +42,7 @@ public class MainController {
     //List companies, jobs and workers
     @GetMapping("/home/companies")
     public String listCompanies(Model model) {
-        List<Company> listCompanies = companyRepo.findAll();
+        List<Company> listCompanies = companyServices.findAll();
         model.addAttribute("listCompanies", listCompanies);
 
         return "home/companies";
@@ -59,17 +57,17 @@ public class MainController {
         }
         else
         {
-            List<Job_Posting> listJobs = jobsRepo.findAll();
+            List<Job_Posting> listJobs = jobService.findAll();
             model.addAttribute("listJobs", listJobs);
         }
         model.addAttribute("keyword",keyword);
-        List<Company> listCompanies = companyRepo.findAll();
+        List<Company> listCompanies = companyServices.findAll();
         model.addAttribute("listCompanies", listCompanies);
         return "home/jobs";
     }
     @GetMapping("/home/workers")
     public String listWorkers(Model model) {
-        List<Worker> listWorkers = workerRepo.findAll();
+        List<Worker> listWorkers = workerServices.findAll();
         model.addAttribute("listWorkers", listWorkers);
 
         return "home/workers";
@@ -78,7 +76,7 @@ public class MainController {
     //Job details
     @GetMapping("/home/jobadds/jobdetails/{id}")
     public String showJobDetails(@PathVariable("id") int id, Model model) {
-        Job_Posting job_posting = jobsRepo.findById(id)
+        Job_Posting job_posting = jobService.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid job Id:" + id));
         model.addAttribute("jobDetails", job_posting);
         return "home/jobdetails";
@@ -87,7 +85,7 @@ public class MainController {
     //Company details
     @GetMapping("/home/companies/companydetails/{id}")
     public String showCompanyDetails(@PathVariable("id") int id, Model model) {
-        Company company = companyRepo.findById(id)
+        Company company = companyServices.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid company Id:" + id));
         model.addAttribute("companyDetails", company);
         return "home/companydetails";

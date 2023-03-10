@@ -2,9 +2,7 @@ package com.job_adds.JobAdds.controllers;
 
 import com.job_adds.JobAdds.entity.*;
 import com.job_adds.JobAdds.repository.*;
-import com.job_adds.JobAdds.service.JobService;
-import com.job_adds.JobAdds.service.WorkerDetails;
-import com.job_adds.JobAdds.service.WorkerDetailsServices;
+import com.job_adds.JobAdds.service.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,19 +19,15 @@ import java.util.Optional;
 @Controller
 public class WorkerController {
     @Autowired
-    private WorkerRepo workerRepo;
+    private WorkerDetailsServices workerServices;
     @Autowired
-    private WorkerDetailsServices workerDetailsServices;
-    @Autowired
-    private CompanyRepo companyRepo;
-    @Autowired
-    private JobsRepo jobsRepo;
+    private CompanyDetailsServices companyServices;
     @Autowired
     private JobService jobService;
     @Autowired
-    private ResumeRepo resumeRepo;
+    private ResumeService resumeService;
     @Autowired
-    private LikePostsRepo likeRepo;
+    private LikePostService likePostService;
 
     //Home
     @GetMapping("/worker/home_worker")
@@ -51,7 +45,7 @@ public class WorkerController {
     @PostMapping("/process_register")
     public String processWorkerRegister(@Valid Worker worker, BindingResult bindingResult, Model model) {
 
-        Worker existingUser = workerRepo.findWorkerByEmail(worker.getEmail());
+        Worker existingUser = workerServices.findWorkerbyEmail(worker.getEmail());
 
         if(existingUser != null && existingUser.getEmail() != null && !existingUser.getEmail().isEmpty()){
             bindingResult.rejectValue("email", null,
@@ -66,7 +60,7 @@ public class WorkerController {
         String encodedPassword = passwordEncoder.encode(worker.getPassword());
         worker.setPassword(encodedPassword);
 
-        workerRepo.save(worker);
+        workerServices.Save(worker);
 
         return "home/process_register";
     }
@@ -79,18 +73,18 @@ public class WorkerController {
     //List companies and jobs
     @GetMapping("/worker/companies")
     public String viewWorkerListCompanies(Model model) {
-        List<Company> listCompanies = companyRepo.findAll();
+        List<Company> listCompanies = companyServices.findAll();
         model.addAttribute("listCompanies", listCompanies);
 
         return "worker/worker_companies";
     }
     @GetMapping("/worker/jobs")
     public String viewWorkerListJobs(Model model) {
-        List<Job_Posting> listJobs = jobsRepo.findAll();
+        List<Job_Posting> listJobs = jobService.findAll();
         model.addAttribute("listJobs", listJobs);
-        List<Company> listCompanies = companyRepo.findAll();
+        List<Company> listCompanies = companyServices.findAll();
         model.addAttribute("listCompanies", listCompanies);
-        List<LikePosts> listLikes = likeRepo.findAll();
+        List<LikePosts> listLikes = likePostService.findAll();
         model.addAttribute("listLikes", listLikes);
 
         return "worker/worker_jobs";
@@ -99,11 +93,12 @@ public class WorkerController {
     //Edit worker information
     @GetMapping("/worker/edit/edit_worker/{id}")
     public String showUpdateForm(@PathVariable("id") int id, Model model, @AuthenticationPrincipal WorkerDetails workerDetails) {
-        Worker worker = workerRepo.findById(id)
+        Integer ID= Integer.valueOf(id);
+        Worker worker = workerServices.findById(ID)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid worker Id:" + id));
 
         String email=workerDetails.getUsername();
-        Worker worker1 = workerRepo.findWorkerByEmail(email);
+        Worker worker1 = workerServices.findWorkerbyEmail(email);
         model.addAttribute("worker", worker1);
         model.addAttribute("workerUpdate", worker);
         return "worker/edit/edit_worker";
@@ -119,7 +114,7 @@ public class WorkerController {
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         String encodedPassword = passwordEncoder.encode(worker.getPassword());
         worker.setPassword(encodedPassword);
-        workerRepo.save(worker);
+        workerServices.Save(worker);
         workerDetails.setWorkerName(worker.getNamesurname());
         return "redirect:/worker/home_worker";
     }
@@ -127,10 +122,11 @@ public class WorkerController {
     //Job details
     @GetMapping("/worker/jobs/jobdetails/{id}")
     public String showJobDetails(@PathVariable("id") int id, Model model) {
-        Job_Posting job_posting = jobsRepo.findById(id)
+        Integer ID= Integer.valueOf(id);
+        Job_Posting job_posting = jobService.findById(ID)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid job Id:" + id));
         model.addAttribute("jobDetails", job_posting);
-        List<Resume> listResumes = resumeRepo.findAll();
+        List<Resume> listResumes = resumeService.findAll();
         model.addAttribute("listResumes", listResumes);
 
         return "worker/jobdetails";
@@ -139,7 +135,8 @@ public class WorkerController {
     //Company details
     @GetMapping("/worker/companies/companydetails/{id}")
     public String showCompanyDetails(@PathVariable("id") int id, Model model) {
-        Company company = companyRepo.findById(id)
+        Integer ID= Integer.valueOf(id);
+        Company company = companyServices.findById(ID)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid company Id:" + id));
         model.addAttribute("companyDetails", company);
         return "worker/companydetails";
@@ -148,7 +145,7 @@ public class WorkerController {
     //List my resumes
     @GetMapping("/worker/my_resumes")
     public String viewWorkerListResumes(Model model) {
-        List<Resume> listResumes = resumeRepo.findAll();
+        List<Resume> listResumes = resumeService.findAll();
         model.addAttribute("listResumes", listResumes);
 
         return "worker/my_resumes";
@@ -157,8 +154,8 @@ public class WorkerController {
     //Add resume
     @GetMapping("/worker/my_resumes/{id}")
     public String showWorkerResumeAddForm(@PathVariable("id") int id,Model model) {
-
-        Job_Posting job_posting = jobsRepo.findById(id)
+        Integer ID= Integer.valueOf(id);
+        Job_Posting job_posting = jobService.findById(ID)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid job Id:" + id));
         model.addAttribute("jobDetails", job_posting);
         model.addAttribute("new_resume", new Resume());
@@ -173,44 +170,28 @@ public class WorkerController {
             return "worker/add/add_resumes";
         }
 
-        resumeRepo.save(resume);
+        resumeService.Save(resume);
 
         return "redirect:/worker/jobs";
     }
-
-//    @PostMapping("/worker/like_job/{id}")
-//    public String likeJoke(@PathVariable("id") int id){
-//
-//        Integer ID= Integer.valueOf(id);
-//        Optional<Job_Posting> job= jobService.findById(ID);
-//        if(!job.isPresent())
-//        {
-//            return "worker/worker_jobs";
-//        }
-//        Job_Posting jobPosting= job.get();
-//        jobPosting.setLikes(jobPosting.getLikes()+1);
-//
-//        jobService.save(jobPosting);
-//        return "redirect:/worker/jobs";
-//    }
     //like jobpost
     @PostMapping("/worker/like_job/{idjob}/{idworker}")
     public String likeJoke(@PathVariable("idjob") int idjob,@PathVariable("idworker") int idworker,@Validated LikePosts likePosts, Model model){
 
         Integer IDJob= Integer.valueOf(idjob);
         Integer IDWorker= Integer.valueOf(idworker);
-        Optional<LikePosts> likePosts1= likeRepo.findByIdjobAndIdworker(IDJob,IDWorker);
+        Optional<LikePosts> likePosts1= likePostService.findByIdjobAndIdworker(IDJob,IDWorker);
         if(likePosts1.isPresent())
         {
             LikePosts likePosts2=likePosts1.get();
             Integer likeid= likePosts2.getId();
             model.addAttribute("likePosts2",likeid);
-            likeRepo.delete(likePosts2);
+            likePostService.Delete(likePosts2);
 
         }
         else
         {
-            likeRepo.save(likePosts);
+            likePostService.Save(likePosts);
         }
 
 

@@ -11,6 +11,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Optional;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Service
@@ -27,6 +30,26 @@ public class WorkerDetailsServices implements UserDetailsService {
         }
         return new WorkerDetails(worker);
     }
+    public Worker findWorkerbyEmail(String email)
+    {
+        return repository.findWorkerByEmail(email);
+    }
+    public Worker Save(Worker worker)
+    {
+        return repository.save(worker);
+    }
+
+    public Optional<Worker> findById(Integer id)
+    {
+        return repository.findById(id);
+    }
 
 
+    public List<Worker> findAll() {
+        return repository.findAll();
+    }
+
+    public void Delete(Worker worker) {
+        repository.delete(worker);
+    }
 }

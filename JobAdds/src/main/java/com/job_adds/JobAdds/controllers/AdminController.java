@@ -2,8 +2,7 @@ package com.job_adds.JobAdds.controllers;
 
 import com.job_adds.JobAdds.entity.*;
 import com.job_adds.JobAdds.repository.*;
-import com.job_adds.JobAdds.service.AdminDetails;
-import com.job_adds.JobAdds.service.CompanyDetails;
+import com.job_adds.JobAdds.service.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,15 +21,17 @@ import java.util.List;
 public class AdminController {
 
     @Autowired
-    private JobsRepo jobsRepo;
+    private AdminDetailsService adminService;
     @Autowired
-    private AdminRepo adminRepo;
+    private WorkerDetailsServices workerServices;
     @Autowired
-    private WorkerRepo workerRepo;
+    private CompanyDetailsServices companyServices;
     @Autowired
-    private CompanyRepo companyRepo;
+    private JobService jobService;
     @Autowired
-    private ResumeRepo resumeRepo;
+    private ResumeService resumeService;
+    @Autowired
+    private LikePostService likePostService;
 
     //Home
     @GetMapping("/admin/home_admin")
@@ -52,7 +53,7 @@ public class AdminController {
         String encodedPassword = passwordEncoder.encode(admin.getPassword());
         admin.setPassword(encodedPassword);
 
-        adminRepo.save(admin);
+        adminService.Save(admin);
 
         return "register/process_register";
     }
@@ -64,23 +65,23 @@ public class AdminController {
     //List companies, jobs and workers
     @GetMapping("/admin/companies")
     public String viewAdminListCompanies(Model model) {
-        List<Company> listCompanies = companyRepo.findAll();
+        List<Company> listCompanies = companyServices.findAll();
         model.addAttribute("listCompanies", listCompanies);
 
         return "admin/companies";
     }
     @GetMapping("/admin/jobs")
     public String viewAdminListJobs(Model model) {
-        List<Job_Posting> listJobs = jobsRepo.findAll();
+        List<Job_Posting> listJobs = jobService.findAll();
         model.addAttribute("listJobs", listJobs);
-        List<Company> listCompanies = companyRepo.findAll();
+        List<Company> listCompanies = companyServices.findAll();
         model.addAttribute("listCompanies", listCompanies);
 
         return "admin/jobs";
     }
     @GetMapping("/admin/workers")
     public String viewAdminListWorkers(Model model) {
-        List<Worker> listWorkers = workerRepo.findAll();
+        List<Worker> listWorkers = workerServices.findAll();
         model.addAttribute("listWorkers", listWorkers);
 
         return "admin/workers";
@@ -89,7 +90,7 @@ public class AdminController {
     //Job details
     @GetMapping("/admin/jobs/jobdetails/{id}")
     public String showJobDetails(@PathVariable("id") int id, Model model) {
-        Job_Posting job_posting = jobsRepo.findById(id)
+        Job_Posting job_posting = jobService.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid job Id:" + id));
         model.addAttribute("jobDetails", job_posting);
         return "admin/jobdetails";
@@ -98,7 +99,7 @@ public class AdminController {
     //Company details
     @GetMapping("/admin/companies/companydetails/{id}")
     public String showCompanyDetails(@PathVariable("id") int id, Model model) {
-        Company company = companyRepo.findById(id)
+        Company company = companyServices.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid company Id:" + id));
         model.addAttribute("companyDetails", company);
         return "admin/companydetails";
@@ -107,10 +108,10 @@ public class AdminController {
     //Edit admin information
     @GetMapping("/admin/edit/edit_admin/{id}")
     public String showUpdateAdminForm(@PathVariable("id") int id, Model model,@AuthenticationPrincipal AdminDetails adminDetails) {
-        Admin admin = adminRepo.findById(id)
+        Admin admin = adminService.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid admin Id:" + id));
         String email=adminDetails.getUsername();
-        Admin admin1 = adminRepo.findAdminByEmail(email);
+        Admin admin1 = adminService.findAdminByEmail(email);
         model.addAttribute("admin", admin1);
         model.addAttribute("adminUpdate", admin);
         return "admin/edit/edit_admin";
@@ -126,7 +127,7 @@ public class AdminController {
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         String encodedPassword = passwordEncoder.encode(admin.getPassword());
         admin.setPassword(encodedPassword);
-        adminRepo.save(admin);
+        adminService.Save(admin);
         adminDetails.setAdminName(admin.getAdminusername());
         return "redirect:/admin/home_admin";
     }
@@ -134,7 +135,7 @@ public class AdminController {
     //All jobs for edit and delete
     @GetMapping("/admin/all/all_jobs")
     public String showCompanyListJob(Model model) {
-        List<Job_Posting> listJobs = jobsRepo.findAll();
+        List<Job_Posting> listJobs = jobService.findAll();
         model.addAttribute("listJobs", listJobs);
         return "admin/all/all_jobs";
     }
@@ -142,7 +143,7 @@ public class AdminController {
     //Edit a job
     @GetMapping("/admin/edit/edit_job/{id}")
     public String showUpdateAdminJobForm(@PathVariable("id") int id, Model model) {
-        Job_Posting job_posting = jobsRepo.findById(id)
+        Job_Posting job_posting = jobService.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid admin job Id:" + id));
         model.addAttribute("adminJobUpdate", job_posting);
         return "admin/edit/edit_job";
@@ -155,23 +156,23 @@ public class AdminController {
             jobPosting.setId(id);
             return "admin/edit/edit_job";
         }
-        jobsRepo.save(jobPosting);
+        jobService.Save(jobPosting);
         return "redirect:/admin/all/all_jobs";
     }
 
     //Delete job
     @GetMapping("/admin/all/all_jobs/delete/{id}")
     public String deleteUser(@PathVariable("id") int id, Model model) {
-        Job_Posting job_posting = jobsRepo.findById(id)
+        Job_Posting job_posting = jobService.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid job delete Id:" + id));
-        jobsRepo.delete(job_posting);
+        jobService.Delete(job_posting);
         return "redirect:/admin/all/all_jobs";
     }
 
     //All companies for edit and delete
     @GetMapping("/admin/all/all_companies")
     public String showAdminCompaniesList(Model model) {
-        List<Company> listCompanies = companyRepo.findAll();
+        List<Company> listCompanies = companyServices.findAll();
         model.addAttribute("listCompanies", listCompanies);
         return "admin/all/all_companies";
     }
@@ -194,7 +195,7 @@ public class AdminController {
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         String encodedPassword = passwordEncoder.encode(company.getPassword());
         company.setPassword(encodedPassword);
-        companyRepo.save(company);
+        companyServices.Save(company);
 
         return "redirect:/admin/all/all_companies";
     }
@@ -202,7 +203,7 @@ public class AdminController {
     //Edit a company
     @GetMapping("/admin/edit/edit_company/{id}")
     public String showUpdateAdminCompanyForm(@PathVariable("id") int id, Model model) {
-        Company company = companyRepo.findById(id)
+        Company company = companyServices.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid admin company Id:" + id));
         model.addAttribute("adminCompanyUpdate", company);
         return "admin/edit/edit_company";
@@ -215,7 +216,7 @@ public class AdminController {
             company.setId(id);
             return "admin/edit/edit_company";
         }
-        companyRepo.save(company);
+        companyServices.Save(company);
         return "redirect:/admin/all/all_companies";
     }
 
@@ -223,16 +224,16 @@ public class AdminController {
     //Delete company
     @GetMapping("/admin/all/all_companies/delete/{id}")
     public String deleteAdminCompany(@PathVariable("id") int id, Model model) {
-        Company company = companyRepo.findById(id)
+        Company company = companyServices.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid company delete Id:" + id));
-        companyRepo.delete(company);
+        companyServices.Delete(company);
         return "redirect:/admin/all/all_companies";
     }
 
     //All workers for edit and delete
     @GetMapping("/admin/all/all_workers")
     public String showAdminWorkersList(Model model) {
-        List<Worker> listWorkers = workerRepo.findAll();
+        List<Worker> listWorkers = workerServices.findAll();
         model.addAttribute("listWorkers", listWorkers);
         return "admin/all/all_workers";
     }
@@ -255,7 +256,7 @@ public class AdminController {
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         String encodedPassword = passwordEncoder.encode(worker.getPassword());
         worker.setPassword(encodedPassword);
-        workerRepo.save(worker);
+        workerServices.Save(worker);
 
         return "redirect:/admin/all/all_workers";
     }
@@ -263,7 +264,7 @@ public class AdminController {
     //Edit a worker
     @GetMapping("/admin/edit/edit_worker/{id}")
     public String showUpdateAdminWorkerForm(@PathVariable("id") int id, Model model) {
-        Worker worker = workerRepo.findById(id)
+        Worker worker = workerServices.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid admin worker Id:" + id));
         model.addAttribute("adminWorkerUpdate", worker);
         return "admin/edit/edit_worker";
@@ -276,16 +277,16 @@ public class AdminController {
             worker.setId(id);
             return "admin/edit/edit_worker";
         }
-        workerRepo.save(worker);
+        workerServices.Save(worker);
         return "redirect:/admin/all/all_workers";
     }
 
     //Delete worker
     @GetMapping("/admin/all/all_workers/delete/{id}")
     public String deleteAdminWorker(@PathVariable("id") int id, Model model) {
-        Worker worker = workerRepo.findById(id)
+        Worker worker = workerServices.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid worker delete Id:" + id));
-        workerRepo.delete(worker);
+        workerServices.Delete(worker);
         return "redirect:/admin/all/all_workers";
     }
 

@@ -8,7 +8,7 @@ import com.job_adds.JobAdds.repository.CompanyRepo;
 import com.job_adds.JobAdds.repository.JobsRepo;
 import com.job_adds.JobAdds.repository.ResumeRepo;
 import com.job_adds.JobAdds.repository.WorkerRepo;
-import com.job_adds.JobAdds.service.CompanyDetails;
+import com.job_adds.JobAdds.service.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,13 +24,15 @@ import java.util.List;
 @Controller
 public class CompanyController {
     @Autowired
-    private CompanyRepo companyRepo;
+    private WorkerDetailsServices workerServices;
     @Autowired
-    private WorkerRepo workerRepo;
+    private CompanyDetailsServices companyServices;
     @Autowired
-    private JobsRepo jobsRepo;
+    private JobService jobService;
     @Autowired
-    private ResumeRepo resumeRepo;
+    private ResumeService resumeService;
+    @Autowired
+    private LikePostService likePostService;
 
     //Home
     @GetMapping("/company/home_company")
@@ -52,7 +54,7 @@ public class CompanyController {
         String encodedPassword = passwordEncoder.encode(company.getPassword());
         company.setPassword(encodedPassword);
 
-        companyRepo.save(company);
+        companyServices.Save(company);
         return "home/process_register";
     }
     @GetMapping("/company/company_login")
@@ -63,16 +65,16 @@ public class CompanyController {
     //List companies and jobs
     @GetMapping("/company/companies")
     public String viewCompanyHomePage(Model model) {
-        List<Company> listCompanies = companyRepo.findAll();
+        List<Company> listCompanies = companyServices.findAll();
         model.addAttribute("listCompanies", listCompanies);
 
         return "company/company_companies";
     }
     @GetMapping("/company/jobs")
     public String viewCompanyHomePage1(Model model) {
-        List<Job_Posting> listJobs = jobsRepo.findAll();
+        List<Job_Posting> listJobs = jobService.findAll();
         model.addAttribute("listJobs", listJobs);
-        List<Company> listCompanies = companyRepo.findAll();
+        List<Company> listCompanies = companyServices.findAll();
         model.addAttribute("listCompanies", listCompanies);
         return "company/company_jobs";
     }
@@ -93,7 +95,7 @@ public class CompanyController {
             return "company/add/add_job";
         }
 
-        jobsRepo.save(jobPosting);
+        jobService.Save(jobPosting);
 
         return "redirect:/company/myjobs";
     }
@@ -101,7 +103,7 @@ public class CompanyController {
     //List of company jobs
     @GetMapping("/company/myjobs")
     public String showCompanyListJob(Model model) {
-        List<Job_Posting> listJobs = jobsRepo.findAll();
+        List<Job_Posting> listJobs = jobService.findAll();
         model.addAttribute("listJobs", listJobs);
         return "company/my_jobs";
     }
@@ -109,10 +111,10 @@ public class CompanyController {
     //Edit company information
     @GetMapping("/company/edit/edit_company/{id}")
     public String showUpdateCompanyForm(@PathVariable("id") int id, Model model,@AuthenticationPrincipal CompanyDetails companyDetails) {
-        Company company = companyRepo.findById(id)
+        Company company = companyServices.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid company Id:" + id));
         String email=companyDetails.getUsername();
-        Company company1 = companyRepo.findCompanyByEmail(email);
+        Company company1 = companyServices.findCompanyByEmail(email);
         model.addAttribute("company", company1);
         model.addAttribute("companyUpdate", company);
         return "company/edit/edit_company";
@@ -128,7 +130,7 @@ public class CompanyController {
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         String encodedPassword = passwordEncoder.encode(company.getPassword());
         company.setPassword(encodedPassword);
-        companyRepo.save(company);
+        companyServices.Save(company);
         companyDetails.setCompanyName(company.getCompanyname());
         return "redirect:/company/home_company";
     }
@@ -136,7 +138,7 @@ public class CompanyController {
     //Edit a job
     @GetMapping("/company/edit/edit_job/{id}")
     public String showUpdateCompanyJobForm(@PathVariable("id") int id, Model model) {
-        Job_Posting job_posting = jobsRepo.findById(id)
+        Job_Posting job_posting = jobService.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid company job Id:" + id));
         model.addAttribute("companyJobUpdate", job_posting);
         return "company/edit/edit_job";
@@ -149,23 +151,23 @@ public class CompanyController {
             jobPosting.setId(id);
             return "company/edit/edit_job";
         }
-        jobsRepo.save(jobPosting);
+        jobService.Save(jobPosting);
         return "redirect:/company/myjobs";
     }
 
     //Delete company job
     @GetMapping("/company/delete/{id}")
     public String deleteUser(@PathVariable("id") int id, Model model) {
-        Job_Posting job_posting = jobsRepo.findById(id)
+        Job_Posting job_posting = jobService.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid company job delete Id:" + id));
-        jobsRepo.delete(job_posting);
+        jobService.Delete(job_posting);
         return "redirect:/company/myjobs";
     }
 
     //Job details
     @GetMapping("/company/jobs/jobdetails/{id}")
     public String showJobDetails(@PathVariable("id") int id, Model model) {
-        Job_Posting job_posting = jobsRepo.findById(id)
+        Job_Posting job_posting = jobService.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid job Id:" + id));
         model.addAttribute("jobDetails", job_posting);
         return "company/jobdetails";
@@ -174,7 +176,7 @@ public class CompanyController {
     //Company details
     @GetMapping("/company/companies/companydetails/{id}")
     public String showCompanyDetails(@PathVariable("id") int id, Model model) {
-        Company company = companyRepo.findById(id)
+        Company company = companyServices.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid company Id:" + id));
         model.addAttribute("companyDetails", company);
         return "company/companydetails";
@@ -183,11 +185,11 @@ public class CompanyController {
     //List my resumes
     @GetMapping("/company/my_resumes")
     public String viewCompanyListResumes(Model model) {
-        List<Resume> listResumes = resumeRepo.findAll();
+        List<Resume> listResumes = resumeService.findAll();
         model.addAttribute("listResumes", listResumes);
-        List<Job_Posting> listJobs = jobsRepo.findAll();
+        List<Job_Posting> listJobs = jobService.findAll();
         model.addAttribute("listJobs", listJobs);
-        List<Worker> listWorkers = workerRepo.findAll();
+        List<Worker> listWorkers = workerServices.findAll();
         model.addAttribute("listWorkers", listWorkers);
 
         return "company/my_resumes";
