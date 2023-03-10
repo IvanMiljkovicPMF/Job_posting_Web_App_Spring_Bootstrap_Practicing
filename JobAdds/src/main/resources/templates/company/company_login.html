@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security6">
+<head>
+  <meta charset="ISO-8859-1">
+  <title>Company Login</title>
+  <link rel="stylesheet" type="text/css" href="/webjars/bootstrap/css/bootstrap.min.css" />
+  <script type="text/javascript" src="/webjars/jquery/jquery.min.js"></script>
+  <script type="text/javascript" src="/webjars/bootstrap/js/bootstrap.min.js"></script>
+</head>
+<body>
+<div class="container text-center">
+  <h1>Company reg</h1>
+  <h3><a th:href="@{/register/register_company}">Register</a></h3>
+</div>
+<form th:action="@{/company/company_login}" method="post" style="max-width: 400px; margin: 0 auto;">
+  <h2>Company Login</h2>
+
+  <div th:if="${param.error}">
+    <h4 style="color: red">[[${session.SPRING_SECURITY_LAST_EXCEPTION.message}]]</h4>
+  </div>
+
+  <table>
+    <tr>
+      <td>E-mail: </td>
+      <td><input type="email" name="email" required /></td>
+    </tr>
+    <tr>
+      <td>Password: </td>
+      <td><input type="password" name="password" required /></td>
+    </tr>
+    <input type="hidden" th:value="${_csrf.token}" name="_csrf" />
+    <tr>
+      <td colspan="2" align="center"><input type="submit" value="Login" /></td>
+    </tr>
+  </table>
+</form>
+</body>
+</html>

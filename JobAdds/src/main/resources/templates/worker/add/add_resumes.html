@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="ISO-8859-1">
+    <title>Sign Up - CodeJava</title>
+    <link rel="stylesheet" type="text/css" href="/webjars/bootstrap/css/bootstrap.min.css" />
+    <link href='https://fonts.googleapis.com/css?family=Roboto:400,100,300,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.2.0/mdb.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="/css/navbar.css" type='text/css'>
+    <link rel="stylesheet" href="/css/backgroundimages.css" type='text/css'>
+
+    <script type="text/javascript" src="/webjars/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="/webjars/bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.2.0/mdb.min.js"></script>
+</head>
+<body >
+<nav class="navbar fixed-top navbar-expand-sm navbar-light" id="neubar">
+    <div class="container">
+
+        <a class="navbar-brand" th:href="@{/worker/home_worker}"><img src="/images/imijobs.png" height="60" /></a>
+
+
+        <div class=" collapse navbar-collapse" id="navbarNavDropdown">
+            <ul class="navbar-nav ms-auto ">
+                <li class="nav-item">
+                    <a class="nav-link "  th:href="@{/worker/home_worker}">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link mx-2" th:href="@{/worker/jobs}">Jobs</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/worker/companies}">Companies</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link mx-2 dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <b th:text ="${#authentication.getPrincipal().getWorkerName()}" ></b>
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                        <li> <a class="dropdown-item" th:href="@{/worker/edit/edit_worker/{id}(id=${#authentication.getPrincipal().getWorkerID()})}">Profile settings</a></li>
+                        <li><a class="dropdown-item" th:href="@{/worker/my_resumes}">Sent resumes</a></li>
+                        <li><a class="dropdown-item" href="#">Saved jobs</a></li>
+                        <li> <form class="dropdown-item" th:action="@{/worker/logout}" method="post">
+                            <input type="submit" value="Logout" />
+                        </form></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="container text-center">
+    <div>
+        <h1>Worker Registration</h1>
+    </div>
+    <form th:action="@{/worker/save_resume}" th:object="${new_resume}"
+          method="post" style="max-width: 600px; margin: 0 auto;">
+        <div class="m-3">
+            <div class="form-group row" th:object="${jobDetails}">
+                <label class="col-4 col-form-label">jobid : </label>
+                <div class="col-8">
+                    <input type="hidden" class="form-control"  th:value="*{id}"  id="jobid" name="jobid" required/>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label class="col-4 col-form-label">jobseekerid : </label>
+                <div class="col-8">
+                    <input type="hidden" th:value="${#authentication.getPrincipal().getWorkerID()}" id="jobseekerid" name="jobseekerid" class="form-control"
+                           required />
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-4 col-form-label">resumepath: </label>
+                <div class="col-8">
+                    <input type="text" th:field="*{resumepath}" class="form-control" required/>
+                </div>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-primary">Send Resume</button>
+            </div>
+        </div>
+    </form>
+</div>
+</body>
+</html>>
